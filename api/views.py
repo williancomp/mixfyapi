@@ -6,4 +6,4 @@ api = NinjaAPI()
 
 @api.get('/recomendacoes')
 def recomendacoes(request):
-    return "Olá Mundo"
+    return "Olá Mundo 2"
