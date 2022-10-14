@@ -22,4 +22,3 @@ class Intervalos(models.Model):
     liveness_max = models.FloatField(null = True)
     valence_min = models.FloatField(null = True)
     valence_max = models.FloatField(null = True)
-    pub_date = models.DateTimeField('date published')
