@@ -8,7 +8,7 @@ api = NinjaAPI()
 
 @api.get('/recomendacoes')
 def recomendacoes(request):
-    return "Olá Mundo 2"
+    return "Olá Mundo"
 
 @api.get('/intervalos', response=List[IntervalosSchema])
 def intervalos(request):

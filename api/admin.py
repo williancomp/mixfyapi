@@ -3,6 +3,6 @@ from django.contrib import admin
 from .models import Intervalos
 
 class IntervalosAdmin(admin.ModelAdmin):
-    list_disply = ['id', 'context', 'genre']
+    list_display = [f.name for f in Intervalos._meta.fields]
 
 admin.site.register(Intervalos, IntervalosAdmin)
