@@ -20,7 +20,6 @@ def checkGenre(genre):
         elif(genre == 'hip-hop-rap'):
             return 'Hip Hop'
         
-
 def convertGenreSpotify(genre):
         if(genre == 'sertanejo'):
             return 'sertanejo'
@@ -42,3 +41,26 @@ def convertGenreSpotify(genre):
             return 'rock'
         elif(genre == 'hip-hop-rap'):
             return 'hip-hop'
+
+def convertGenreBanco(genre):
+        if(genre == 'Sertanejo'):
+            return 'sertanejo'
+        elif(genre == 'Pop'):
+            return 'pop'
+        elif(genre == 'Gospel'):
+            return 'gospel'
+        elif(genre == 'MPB'):
+            return 'mpb'
+        elif(genre == 'Samba/Pagode'):
+            return 'samba-pagode'
+        elif(genre == 'Rock Int.'):
+            return 'rock-internacional'
+        elif(genre == 'Forró/Piseiro'):
+            return 'forro-piseiro'
+        elif(genre == 'Eletrônica'):
+            return 'eletronica'
+        elif(genre == 'Rock/Brasil'):
+            return 'rock-brasil'
+        elif(genre == 'HipHop/Rap'):
+            return 'hip-hop-rap'
+

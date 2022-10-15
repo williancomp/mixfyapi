@@ -22,3 +22,10 @@ class Intervalos(models.Model):
     liveness_max = models.FloatField(null = True)
     valence_min = models.FloatField(null = True)
     valence_max = models.FloatField(null = True)
+
+class Usuarios(models.Model):
+    email = models.EmailField()
+    genre1 = models.CharField(max_length=100)
+    genre2 = models.CharField(max_length=100)
+    genre3 = models.CharField(max_length=100)
+    pub_date = models.DateTimeField('date published')
