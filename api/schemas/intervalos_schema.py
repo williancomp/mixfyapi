@@ -12,3 +12,8 @@ class UsuariosSchema(ModelSchema):
     class Config:
         model = Usuarios
         model_fields = "__all__"
+
+class GenreSchema(Schema):
+    genre1: str
+    genre2: str
+    genre3: str
