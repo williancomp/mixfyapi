@@ -37,7 +37,8 @@ def generos(request, email: str, genre:GenreSchema):
 
 @api.get('/recomendacoes/{email}/{context}/{popularidade}/{token}')
 def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
-    limite = 10
+    print(token)
+    limite = 5
     usuario = Usuarios.objects.filter(email = email).first()
     genre1 = usuario.genre1
     genre2 = usuario.genre2
@@ -67,6 +68,38 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
         lista2 = requests.get(url2).json()
         lista3 = requests.get(url3).json()
         #print(lista1)
+
+        a:List = ['willian']
+        print(a)
+        a.append('Garcias')
+        print(a)
+
+        print(lista1)
+
+        print(type(lista1['tracks']))
+        print('\n\n\n\n\n')
+        #REUNI TODAS AS MUSICAS DE CADA GENERO EM UMA UNICA LISTA E REMOVE DUPLICADOS
+        contador1:int = 0
+        for item2 in lista2['tracks']:
+            for item1 in lista1['tracks']:
+                if(item2['name'] == item1['name']):
+                    contador1+=1
+            if(contador1 == 0):
+                lista1['tracks'].append(item2)
+                #array_push(lista1['tracks'], item2)
+            else:
+                contador1 = 0
+        
+        contador2:int = 0
+        for item3 in lista3['tracks']:
+            for item4 in lista1['tracks']:
+                if(item3['name'] == item4['name']):
+                    contador2+=1
+            if(contador2 == 0):
+                lista1['tracks'].append(item3)
+            else:
+                contador2=0       
+
         return lista1
     #print('RETORNANDO LISTA SEM CONTEXTO DEFINIDO------')
     link: str = "https://api.spotify.com/v1/recommendations?seed_genres="+convertGenreSpotify(usuario.genre1)+"&market=BR&min_popularity="+popularidade+"&limit=10"
