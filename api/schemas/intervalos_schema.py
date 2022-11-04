@@ -17,3 +17,10 @@ class GenreSchema(Schema):
     genre1: str
     genre2: str
     genre3: str
+
+class ComentarioSchema(Schema):
+    id: str
+    artista: str
+    context: str
+    radio: str
+    comentario: str

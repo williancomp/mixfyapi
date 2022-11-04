@@ -3,7 +3,7 @@ from gc import get_objects
 from ninja import NinjaAPI
 from typing import List
 from api.models import Intervalos, Usuarios
-from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema
+from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 
@@ -67,17 +67,8 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
         lista1 = requests.get(url1).json()
         lista2 = requests.get(url2).json()
         lista3 = requests.get(url3).json()
-        #print(lista1)
+        
 
-        a:List = ['willian']
-        print(a)
-        a.append('Garcias')
-        print(a)
-
-        print(lista1)
-
-        print(type(lista1['tracks']))
-        print('\n\n\n\n\n')
         #REUNI TODAS AS MUSICAS DE CADA GENERO EM UMA UNICA LISTA E REMOVE DUPLICADOS
         contador1:int = 0
         for item2 in lista2['tracks']:
@@ -104,3 +95,29 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
     #print('RETORNANDO LISTA SEM CONTEXTO DEFINIDO------')
     link: str = "https://api.spotify.com/v1/recommendations?seed_genres="+convertGenreSpotify(usuario.genre1)+"&market=BR&min_popularity="+popularidade+"&limit=10"
     return requests.get(link, headers={'Authorization': 'Bearer ' + token}).json()
+
+
+
+
+@api.post('/avaliacoes/{email}/{token}')
+def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
+
+    url = "https://api.spotify.com/v1/audio-features"
+    
+    #ADICIONA TODOS IDs DAS MUSICAS EM UM UNICA STRING
+    ids:str = ''
+    for item in comentario:
+        ids+= item.id + ","
+
+    #BUSCA AS MÚSICAS PELO SEUS IDs
+    response = requests.get(url, params={
+        "access_token": token, 
+        "ids": ids
+    }).json()
+    
+    features = response['audio_features']
+    print(features)
+
+
+    return features[0]['danceability']
+
