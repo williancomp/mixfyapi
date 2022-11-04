@@ -1,6 +1,6 @@
 from ninja import Schema, ModelSchema
 
-from api.models import Intervalos, Usuarios
+from api.models import Intervalos, Usuarios, Avaliacoes
 
 
 class IntervalosSchema(ModelSchema):
@@ -11,6 +11,11 @@ class IntervalosSchema(ModelSchema):
 class UsuariosSchema(ModelSchema):
     class Config:
         model = Usuarios
+        model_fields = "__all__"
+
+class AvaliacoesSchema(ModelSchema):
+    class Config:
+        model = Avaliacoes
         model_fields = "__all__"
 
 class GenreSchema(Schema):

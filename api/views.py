@@ -2,8 +2,8 @@
 from gc import get_objects
 from ninja import NinjaAPI
 from typing import List
-from api.models import Intervalos, Usuarios
-from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema
+from api.models import Intervalos, Usuarios, Avaliacoes
+from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema, AvaliacoesSchema
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 
@@ -116,8 +116,29 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
     }).json()
     
     features = response['audio_features']
-    print(features)
+    
 
+    for coment in comentario:
+        avaliacao = Avaliacoes()
+        avaliacao.idMusic = coment.id
+        avaliacao.email = email
+        avaliacao.context = coment.context
+        avaliacao.artista = coment.artista
+        avaliacao.evaluation = coment.radio
+        avaliacao.comentario = coment.comentario
+        avaliacao.danceability = features[0]['danceability']
+        avaliacao.energy = features[0]['danceability']
+        avaliacao.loudness = features[0]['danceability']
+        avaliacao.speechiness = features[0]['danceability']
+        avaliacao.acousticness = features[0]['danceability']
+        avaliacao.instrumentalness = features[0]['danceability']
+        avaliacao.liveness = features[0]['danceability']
+        avaliacao.valence = features[0]['danceability']
+        avaliacao.tempo = features[0]['danceability']
+        avaliacao.save()
+        
+
+    
 
     return features[0]['danceability']
 
