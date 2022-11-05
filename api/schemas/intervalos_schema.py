@@ -1,6 +1,6 @@
 from ninja import Schema, ModelSchema
 
-from api.models import Intervalos, Usuarios, Avaliacoes
+from api.models import Intervalos, Usuarios, Avaliacoes, Artistas
 
 
 class IntervalosSchema(ModelSchema):
@@ -18,6 +18,11 @@ class AvaliacoesSchema(ModelSchema):
         model = Avaliacoes
         model_fields = "__all__"
 
+class ArtistasSchema(ModelSchema):
+    class Config:
+        model = Artistas
+        model_fields = "__all__"
+
 class GenreSchema(Schema):
     genre1: str
     genre2: str
@@ -26,6 +31,8 @@ class GenreSchema(Schema):
 class ComentarioSchema(Schema):
     id: str
     artista: str
+    nomeArtista:str
     context: str
     radio: str
     comentario: str
+

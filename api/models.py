@@ -35,6 +35,7 @@ class Avaliacoes(models.Model):
     idMusic = models.CharField(max_length=100)
     email = models.EmailField()
     artista = models.CharField(max_length=100)
+    nomeArtista = models.CharField(max_length=100,  null = True)
     context = models.CharField(max_length=100)
     evaluation = models.CharField(max_length=100)
     comentario = models.CharField(max_length=200)
@@ -47,4 +48,12 @@ class Avaliacoes(models.Model):
     liveness = models.FloatField()
     valence = models.FloatField()
     tempo = models.FloatField()
+    pub_date = models.DateTimeField('date published')
+
+class Artistas(models.Model):
+    email = models.CharField(max_length=100)
+    contexto = models.CharField(max_length=100, null = True)
+    idArtista = models.CharField(max_length=100)
+    nomeArtista = models.CharField(max_length=100,  null = True)
+    likes = models.IntegerField(default=0)
     pub_date = models.DateTimeField('date published')

@@ -3,7 +3,7 @@ from gc import get_objects
 from ninja import NinjaAPI
 from typing import List
 from api.models import Intervalos, Usuarios, Avaliacoes
-from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema, AvaliacoesSchema
+from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema, AvaliacoesSchema, Artistas, ArtistasSchema
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 import datetime
@@ -65,11 +65,29 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
         url1 = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_genres="+genreSpotify1+"&danceability_min="+str(intervalos1.danceability_min)+"&danceability_max="+str(intervalos1.danceability_max)+"&energy_min="+str(intervalos1.energy_min)+"&energy_max="+str(intervalos1.energy_max)+"&loudness_min="+str(intervalos1.loudness_min)+"&loudness_max="+str(intervalos1.loudness_max)+"&speechiness_min="+str(intervalos1.speechiness_min)+"&speechiness_max="+str(intervalos1.speechiness_max)+"&acoustic_min="+str(intervalos1.acoustic_min)+"&acoustic_max="+str(intervalos1.acoustic_max)+"&valence_min="+str(intervalos1.valence_min)+"&valence_max="+str(intervalos1.valence_max)+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
         url2 = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_genres="+genreSpotify2+"&danceability_min="+str(intervalos2.danceability_min)+"&danceability_max="+str(intervalos2.danceability_max)+"&energy_min="+str(intervalos2.energy_min)+"&energy_max="+str(intervalos2.energy_max)+"&loudness_min="+str(intervalos2.loudness_min)+"&loudness_max="+str(intervalos2.loudness_max)+"&speechiness_min="+str(intervalos2.speechiness_min)+"&speechiness_max="+str(intervalos2.speechiness_max)+"&acoustic_min="+str(intervalos2.acoustic_min)+"&acoustic_max="+str(intervalos2.acoustic_max)+"&valence_min="+str(intervalos2.valence_min)+"&valence_max="+str(intervalos2.valence_max)+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
         url3 = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_genres="+genreSpotify3+"&danceability_min="+str(intervalos3.danceability_min)+"&danceability_max="+str(intervalos3.danceability_max)+"&energy_min="+str(intervalos3.energy_min)+"&energy_max="+str(intervalos3.energy_max)+"&loudness_min="+str(intervalos3.loudness_min)+"&loudness_max="+str(intervalos3.loudness_max)+"&speechiness_min="+str(intervalos3.speechiness_min)+"&speechiness_max="+str(intervalos3.speechiness_max)+"&acoustic_min="+str(intervalos3.acoustic_min)+"&acoustic_max="+str(intervalos3.acoustic_max)+"&valence_min="+str(intervalos3.valence_min)+"&valence_max="+str(intervalos3.valence_max)+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
-
+        
         lista1 = requests.get(url1).json()
         lista2 = requests.get(url2).json()
         lista3 = requests.get(url3).json()
         
+
+        #VERIFICA O ARTISTA PREFERIDO E BUSCA RECOMENDAÇÕES BASEADA NO ARTISTA PREFERIDO
+        artista = Artistas.objects.filter(email = email, contexto = context).order_by('-likes').first()
+        if(artista != None):
+            urlArtista = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_artists="+artista.idArtista+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
+            listaArtista = requests.get(urlArtista).json()
+            
+            #ADICIONA A LISTA DE ARTISTAS NA LISTA 1 - SOMENTE SE TIVER ARTISTA PREFERIDO
+            contador3:int = 0
+            for item5 in listaArtista['tracks']:
+                for item6 in lista1['tracks']:
+                    if(item5['name'] == item6['name']):
+                        contador3+=1
+                if(contador3 == 0):
+                    print(item5['name'])
+                    lista1['tracks'].append(item5)
+                else:
+                    contador3=0
 
         #REUNI TODAS AS MUSICAS DE CADA GENERO EM UMA UNICA LISTA E REMOVE DUPLICADOS
         contador1:int = 0
@@ -82,7 +100,7 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
                 #array_push(lista1['tracks'], item2)
             else:
                 contador1 = 0
-        
+
         contador2:int = 0
         for item3 in lista3['tracks']:
             for item4 in lista1['tracks']:
@@ -93,6 +111,7 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
             else:
                 contador2=0       
 
+        
         return lista1
     #print('RETORNANDO LISTA SEM CONTEXTO DEFINIDO------')
     link: str = "https://api.spotify.com/v1/recommendations?seed_genres="+convertGenreSpotify(usuario.genre1)+"&market=BR&min_popularity="+popularidade+"&limit=10"
@@ -121,11 +140,13 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
     
 
     for i in range(len(comentario)):
+        
         avaliacao = Avaliacoes()
         avaliacao.idMusic = comentario[i].id
         avaliacao.email = email
         avaliacao.context = comentario[i].context
         avaliacao.artista = comentario[i].artista
+        avaliacao.nomeArtista = comentario[i].nomeArtista
         avaliacao.evaluation = comentario[i].radio
         avaliacao.comentario = comentario[i].comentario
         avaliacao.danceability = features[i]['danceability']
@@ -140,5 +161,25 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
         avaliacao.pub_date = datetime.datetime.now()
         avaliacao.save()
         
+        artista = Artistas.objects.filter(email = email, contexto = comentario[i].context, idArtista = comentario[i].artista).first()
+        if(artista == None):
+            newArtista = Artistas()
+            newArtista.email = email
+            newArtista.contexto = comentario[i].context
+            newArtista.idArtista = comentario[i].artista
+            newArtista.nomeArtista = comentario[i].nomeArtista
+            newArtista.likes = 1
+            newArtista.pub_date = datetime.datetime.now()
+            newArtista.save()
+        else:
+            artista.likes+=1   
+            artista.save()     
     return 'sucesso'
 
+@api.get('/avaliacoes')
+def generos(request):
+    artista = Artistas.objects.filter(email = 'willian@gmail.com').order_by('-likes').first()
+    if(artista != None):
+        return artista.idArtista
+    else:
+        return "None"
