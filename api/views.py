@@ -77,6 +77,11 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
             urlArtista = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_artists="+artista.idArtista+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
             listaArtista = requests.get(urlArtista).json()
             
+            backLista1 = lista1
+            lista1 = listaArtista
+            listaArtista = backLista1
+            
+
             #ADICIONA A LISTA DE ARTISTAS NA LISTA 1 - SOMENTE SE TIVER ARTISTA PREFERIDO
             contador3:int = 0
             for item5 in listaArtista['tracks']:
@@ -84,11 +89,10 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
                     if(item5['name'] == item6['name']):
                         contador3+=1
                 if(contador3 == 0):
-                    print(item5['name'])
+                    ##print(item5['name'])
                     lista1['tracks'].append(item5)
                 else:
                     contador3=0
-
         #REUNI TODAS AS MUSICAS DE CADA GENERO EM UMA UNICA LISTA E REMOVE DUPLICADOS
         contador1:int = 0
         for item2 in lista2['tracks']:
