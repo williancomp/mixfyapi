@@ -129,14 +129,14 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
         avaliacao.evaluation = comentario[i].radio
         avaliacao.comentario = comentario[i].comentario
         avaliacao.danceability = features[i]['danceability']
-        avaliacao.energy = features[i]['danceability']
-        avaliacao.loudness = features[i]['danceability']
-        avaliacao.speechiness = features[i]['danceability']
-        avaliacao.acousticness = features[i]['danceability']
-        avaliacao.instrumentalness = features[i]['danceability']
-        avaliacao.liveness = features[i]['danceability']
-        avaliacao.valence = features[i]['danceability']
-        avaliacao.tempo = features[i]['danceability']
+        avaliacao.energy = features[i]['energy']
+        avaliacao.loudness = features[i]['loudness']
+        avaliacao.speechiness = features[i]['speechiness']
+        avaliacao.acousticness = features[i]['acousticness']
+        avaliacao.instrumentalness = features[i]['instrumentalness']
+        avaliacao.liveness = features[i]['liveness']
+        avaliacao.valence = features[i]['valence']
+        avaliacao.tempo = features[i]['tempo']
         avaliacao.pub_date = datetime.datetime.now()
         avaliacao.save()
         
