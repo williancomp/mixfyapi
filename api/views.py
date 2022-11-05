@@ -6,6 +6,8 @@ from api.models import Intervalos, Usuarios, Avaliacoes
 from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema, AvaliacoesSchema
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+import datetime
+
 
 import requests
 
@@ -118,27 +120,25 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
     features = response['audio_features']
     
 
-    for coment in comentario:
+    for i in range(len(comentario)):
         avaliacao = Avaliacoes()
-        avaliacao.idMusic = coment.id
+        avaliacao.idMusic = comentario[i].id
         avaliacao.email = email
-        avaliacao.context = coment.context
-        avaliacao.artista = coment.artista
-        avaliacao.evaluation = coment.radio
-        avaliacao.comentario = coment.comentario
-        avaliacao.danceability = features[0]['danceability']
-        avaliacao.energy = features[0]['danceability']
-        avaliacao.loudness = features[0]['danceability']
-        avaliacao.speechiness = features[0]['danceability']
-        avaliacao.acousticness = features[0]['danceability']
-        avaliacao.instrumentalness = features[0]['danceability']
-        avaliacao.liveness = features[0]['danceability']
-        avaliacao.valence = features[0]['danceability']
-        avaliacao.tempo = features[0]['danceability']
+        avaliacao.context = comentario[i].context
+        avaliacao.artista = comentario[i].artista
+        avaliacao.evaluation = comentario[i].radio
+        avaliacao.comentario = comentario[i].comentario
+        avaliacao.danceability = features[i]['danceability']
+        avaliacao.energy = features[i]['danceability']
+        avaliacao.loudness = features[i]['danceability']
+        avaliacao.speechiness = features[i]['danceability']
+        avaliacao.acousticness = features[i]['danceability']
+        avaliacao.instrumentalness = features[i]['danceability']
+        avaliacao.liveness = features[i]['danceability']
+        avaliacao.valence = features[i]['danceability']
+        avaliacao.tempo = features[i]['danceability']
+        avaliacao.pub_date = datetime.datetime.now()
         avaliacao.save()
         
-
-    
-
-    return features[0]['danceability']
+    return 'sucesso'
 
