@@ -72,9 +72,15 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
         
 
         #VERIFICA O ARTISTA PREFERIDO E BUSCA RECOMENDAÇÕES BASEADA NO ARTISTA PREFERIDO
-        artista = Artistas.objects.filter(email = email, contexto = context).order_by('-likes').first()
-        if(artista != None):
-            urlArtista = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_artists="+artista.idArtista+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
+        artista = Artistas.objects.filter(email = email, contexto = context).order_by('-likes')
+        if(artista.exists()):
+            topArtistas = ""
+            for i in range(len(artista)):
+                if(i < 3):
+                    topArtistas += artista[i].idArtista + ","
+
+            urlArtista = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_artists="+topArtistas+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
+
             listaArtista = requests.get(urlArtista).json()
             
             backLista1 = lista1
@@ -187,3 +193,5 @@ def generos(request):
         return artista.idArtista
     else:
         return "None"
+
+

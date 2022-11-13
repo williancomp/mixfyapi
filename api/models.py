@@ -25,6 +25,7 @@ class Intervalos(models.Model):
     valence_max = models.FloatField(null = True)
 
 class Usuarios(models.Model):
+    nome = models.CharField(max_length=100, null = True)
     email = models.EmailField()
     genre1 = models.CharField(max_length=100)
     genre2 = models.CharField(max_length=100)
