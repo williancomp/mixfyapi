@@ -191,8 +191,8 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
 
 
 
-@api.post('/aprendizado/{context}')
-def aprendizado(request, context:str, track:TrackSchema):
+@api.post('/aprendizado/{email}/{context}')
+def aprendizado(request, email: str, context:str, track:TrackSchema):
     
     # MODELO É CRIADO
     model = tree.HoeffdingTreeClassifier()
@@ -202,7 +202,7 @@ def aprendizado(request, context:str, track:TrackSchema):
 
 
     
-    avaliacoes = Avaliacoes.objects.filter(context = context)
+    avaliacoes = Avaliacoes.objects.filter(email = email, context = context)
 
     for avaliacao in avaliacoes:
         context = avaliacao.context
