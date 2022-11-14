@@ -36,3 +36,15 @@ class ComentarioSchema(Schema):
     radio: str
     comentario: str
 
+class TrackSchema(Schema):
+    context: str
+    danceability:float
+    energy:float
+    loudness:float
+    speechiness:float
+    acousticness:float
+    instrumentalness:float
+    liveness:float
+    valence:float
+
+

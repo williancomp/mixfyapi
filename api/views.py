@@ -1,11 +1,13 @@
 
 from gc import get_objects
+import numpy as np
 from ninja import NinjaAPI
 from typing import List
 from api.models import Intervalos, Usuarios, Avaliacoes
-from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema, AvaliacoesSchema, Artistas, ArtistasSchema
+from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema, AvaliacoesSchema, TrackSchema, Artistas, ArtistasSchema
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from river import datasets, tree, metrics
 import datetime
 
 
@@ -186,12 +188,53 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
             artista.save()     
     return 'sucesso'
 
-@api.get('/avaliacoes')
-def generos(request):
-    artista = Artistas.objects.filter(email = 'willian@gmail.com').order_by('-likes').first()
-    if(artista != None):
-        return artista.idArtista
-    else:
-        return "None"
+
+
+
+@api.post('/aprendizado')
+def aprendizado(request, track:TrackSchema):
+    
+    # MODELO É CRIADO
+    model = tree.HoeffdingTreeClassifier()
+
+    # MÉTRICA CRIADA
+    metric = metrics.ClassificationReport()
+
+
+    
+
+    avaliacoes = Avaliacoes.objects.all()
+
+    for avaliacao in avaliacoes:
+        context = avaliacao.context
+        danceability = avaliacao.danceability
+        energy = avaliacao.energy
+        loudness = avaliacao.loudness
+        speechiness = avaliacao.speechiness
+        acousticness = avaliacao.acousticness
+        instrumentalness = avaliacao.instrumentalness
+        liveness = avaliacao.liveness
+        valence = avaliacao.valence
+        x = {'context': context, 'danceability': danceability, 'energy': energy, 'loudness': loudness, 'speechiness': speechiness, 'acousticness': acousticness, 'instrumentalness': instrumentalness, 'liveness': liveness, 'valence': valence,}
+        y = avaliacao.evaluation
+
+        #VAI ALIMENTANDO O MODELO E ATUALIZANDO A MÉTRICA
+        y_pred = model.predict_one(x)
+        model.learn_one(x, y)
+        if y_pred is not None:
+            metric.update(y, y_pred)
+
+    #MOSTRA A MÉTRICA
+    print(metric)
+    print("\n")
+
+
+
+    #TESTAR VALOR RECEBIDO
+    value = {'context': track.context, 'danceability': track.danceability, 'energy': track.energy, 'loudness': track.loudness, 'speechiness': track.speechiness, 'acousticness': track.acousticness, 'instrumentalness': track.instrumentalness, 'liveness': track.liveness, 'valence': track.valence,}
+
+    proba_one = model.predict_proba_one(value)
+    
+    return proba_one
 
 
