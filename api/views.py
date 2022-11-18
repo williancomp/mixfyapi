@@ -4,15 +4,13 @@ import numpy as np
 from ninja import NinjaAPI
 from typing import List
 from api.models import Intervalos, Usuarios, Avaliacoes
-from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema, AvaliacoesSchema, TrackSchema, Artistas, ArtistasSchema
+from api.schemas.intervalos_schema import GenreSchema, IntervalosSchema, UsuariosSchema, ComentarioSchema, AvaliacoesSchema, TrackSchema, Artistas, ArtistasSchema, IntervaloObject
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from river import datasets, tree, metrics
 import datetime
-
-
 import requests
-
+from api.funcoes import getListasComIntervalos, getUnirListas, getIntervalosAvaliacoes, getListaIntervaloAprendido
 from api.utils import convertGenreBanco, convertGenreSpotify 
 
 api = NinjaAPI()
@@ -47,89 +45,49 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
     genre1 = usuario.genre1
     genre2 = usuario.genre2
     genre3 = usuario.genre3
-    #print(genre1)
-    #print(genre2)
-    #print(genre3)
+
     #VERIFICA SE O CONTEXTO VEIO, POIS O USUARIO PODE BUSCAR MÚSICAS SEM INFORMAR O CONTEXTO
     if(context != 'none'):
-        #BUSCA O INTERVALO DO CONTEXTO INFORMADO.
-        #SEPARA O INTERVALO PARA CADA GENERO
-        #CONVERTE O GENERO DO PERFIL DO USUARIO PARA O GENERO DA LISTA DE INTERVALOS
-        intervalos1 = Intervalos.objects.filter(context = context, genre = convertGenreBanco(genre1)).first()
-        intervalos2 = Intervalos.objects.filter(context = context, genre = convertGenreBanco(genre2)).first()
-        intervalos3 = Intervalos.objects.filter(context = context, genre = convertGenreBanco(genre3)).first()
         
-        #CONVERTE O GENERO (BRASIL) DO PERFIL DO USUARIO PARA UM GENERO EQUIVALENTE NO SPOTIFY
-        genreSpotify1 = convertGenreSpotify(usuario.genre1)
-        genreSpotify2 = convertGenreSpotify(usuario.genre2)
-        genreSpotify3 = convertGenreSpotify(usuario.genre3)
+        #OBTEM A LISTA DE ARTISTAS PREFERIDOS
+        listaArtistasPreferidos =  Artistas.objects.filter(email = email, contexto = context).order_by('-likes')
 
-        url1 = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_genres="+genreSpotify1+"&danceability_min="+str(intervalos1.danceability_min)+"&danceability_max="+str(intervalos1.danceability_max)+"&energy_min="+str(intervalos1.energy_min)+"&energy_max="+str(intervalos1.energy_max)+"&loudness_min="+str(intervalos1.loudness_min)+"&loudness_max="+str(intervalos1.loudness_max)+"&speechiness_min="+str(intervalos1.speechiness_min)+"&speechiness_max="+str(intervalos1.speechiness_max)+"&acoustic_min="+str(intervalos1.acoustic_min)+"&acoustic_max="+str(intervalos1.acoustic_max)+"&valence_min="+str(intervalos1.valence_min)+"&valence_max="+str(intervalos1.valence_max)+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
-        url2 = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_genres="+genreSpotify2+"&danceability_min="+str(intervalos2.danceability_min)+"&danceability_max="+str(intervalos2.danceability_max)+"&energy_min="+str(intervalos2.energy_min)+"&energy_max="+str(intervalos2.energy_max)+"&loudness_min="+str(intervalos2.loudness_min)+"&loudness_max="+str(intervalos2.loudness_max)+"&speechiness_min="+str(intervalos2.speechiness_min)+"&speechiness_max="+str(intervalos2.speechiness_max)+"&acoustic_min="+str(intervalos2.acoustic_min)+"&acoustic_max="+str(intervalos2.acoustic_max)+"&valence_min="+str(intervalos2.valence_min)+"&valence_max="+str(intervalos2.valence_max)+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
-        url3 = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_genres="+genreSpotify3+"&danceability_min="+str(intervalos3.danceability_min)+"&danceability_max="+str(intervalos3.danceability_max)+"&energy_min="+str(intervalos3.energy_min)+"&energy_max="+str(intervalos3.energy_max)+"&loudness_min="+str(intervalos3.loudness_min)+"&loudness_max="+str(intervalos3.loudness_max)+"&speechiness_min="+str(intervalos3.speechiness_min)+"&speechiness_max="+str(intervalos3.speechiness_max)+"&acoustic_min="+str(intervalos3.acoustic_min)+"&acoustic_max="+str(intervalos3.acoustic_max)+"&valence_min="+str(intervalos3.valence_min)+"&valence_max="+str(intervalos3.valence_max)+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
+        #SE NAO TIVER AVALIAÇÕES SUFICIENTES DE UM CONTEXTO DE UM DETERMINADO USUARIO, 
+        #ENTÃO, RECOMENDA MÚSICAS QUE CONSIDERAM OS INTERVALOS DO ESTUDO.
+        avaliacoes = Avaliacoes.objects.filter(email = email, context = context).order_by('-pub_date')[:50]
         
-        lista1 = requests.get(url1).json()
-        lista2 = requests.get(url2).json()
-        lista3 = requests.get(url3).json()
-        
+        if(len(avaliacoes) < 50):
 
-        #VERIFICA O ARTISTA PREFERIDO E BUSCA RECOMENDAÇÕES BASEADA NO ARTISTA PREFERIDO
-        artista = Artistas.objects.filter(email = email, contexto = context).order_by('-likes')
-        if(artista.exists()):
-            topArtistas = ""
-            for i in range(len(artista)):
-                if(i < 3):
-                    topArtistas += artista[i].idArtista + ","
-
-            urlArtista = "https://api.spotify.com/v1/recommendations?access_token="+token+"&market=BR&seed_artists="+topArtistas+"&min_popularity="+str(popularidade)+"&limit="+str(limite)
-
-            listaArtista = requests.get(urlArtista).json()
-            
-            backLista1 = lista1
-            lista1 = listaArtista
-            listaArtista = backLista1
+            #OBTEM 3 LISTAS DE MÚSICAS, CADA UMA DE UM GÊNERO DO USUARIO E SEU RESPECTIVO INTERVALO
+            lista1, lista2, lista3 =  getListasComIntervalos(email, usuario, token, context, genre1, genre2, genre3, popularidade, limite)
             
 
-            #ADICIONA A LISTA DE ARTISTAS NA LISTA 1 - SOMENTE SE TIVER ARTISTA PREFERIDO
-            contador3:int = 0
-            for item5 in listaArtista['tracks']:
-                for item6 in lista1['tracks']:
-                    if(item5['name'] == item6['name']):
-                        contador3+=1
-                if(contador3 == 0):
-                    ##print(item5['name'])
-                    lista1['tracks'].append(item5)
-                else:
-                    contador3=0
-        #REUNI TODAS AS MUSICAS DE CADA GENERO EM UMA UNICA LISTA E REMOVE DUPLICADOS
-        contador1:int = 0
-        for item2 in lista2['tracks']:
-            for item1 in lista1['tracks']:
-                if(item2['name'] == item1['name']):
-                    contador1+=1
-            if(contador1 == 0):
-                lista1['tracks'].append(item2)
-                #array_push(lista1['tracks'], item2)
-            else:
-                contador1 = 0
+            #FAZ A JUNÇÃO DAS LISTAS E REMOVE AS MÚSICAS DUPLICADAS
+            listaFinal = getUnirListas(lista1, lista2, lista3, listaArtistasPreferidos, token, popularidade, limite)
+            print("\n")
+            print("RETORNANDO DO INTERVALO===")
+            print("\n")
+            return listaFinal
 
-        contador2:int = 0
-        for item3 in lista3['tracks']:
-            for item4 in lista1['tracks']:
-                if(item3['name'] == item4['name']):
-                    contador2+=1
-            if(contador2 == 0):
-                lista1['tracks'].append(item3)
-            else:
-                contador2=0       
+        #POSSUI AVALIAÇÕES SUFICIENTES, ENTÃO IDENTIFICA O INTERVALO A PARTIR DAS AVALIAÇÕES
+        #DEPOIS UNI COM A LISTA DE ARTISTAS PREFERIDOS
+        if(len(avaliacoes)>=50):
 
-        
-        return lista1
+            #OBTEM INTERVALOS DE MIN E MAX APARTIR DAS AVALIACOES DO USUARIO
+            intObject: IntervaloObject =  getIntervalosAvaliacoes(avaliacoes)
+
+            #OBTEM LISTA DE MUSICAS COM INTERVALOS APRENDIDOS, CONSIDERANDO ARTISTAS E GÊNEROS PREFERIDOS
+            listaFinal = getListaIntervaloAprendido(intObject, listaArtistasPreferidos, token, genre1, genre2, genre3, popularidade, limite)
+            
+            print("\n")
+            print("RETORNANDO LISTA APRENDIDA===")
+            print("\n")
+            return listaFinal
+
+
     #print('RETORNANDO LISTA SEM CONTEXTO DEFINIDO------')
     link: str = "https://api.spotify.com/v1/recommendations?seed_genres="+convertGenreSpotify(usuario.genre1)+"&market=BR&min_popularity="+popularidade+"&limit=10"
     return requests.get(link, headers={'Authorization': 'Bearer ' + token}).json()
-
-
 
 
 @api.post('/avaliacoes/{email}/{token}')
@@ -173,19 +131,20 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
         avaliacao.pub_date = datetime.datetime.now()
         avaliacao.save()
         
-        artista = Artistas.objects.filter(email = email, contexto = comentario[i].context, idArtista = comentario[i].artista).first()
-        if(artista == None):
-            newArtista = Artistas()
-            newArtista.email = email
-            newArtista.contexto = comentario[i].context
-            newArtista.idArtista = comentario[i].artista
-            newArtista.nomeArtista = comentario[i].nomeArtista
-            newArtista.likes = 1
-            newArtista.pub_date = datetime.datetime.now()
-            newArtista.save()
-        else:
-            artista.likes+=1   
-            artista.save()     
+        if(int(comentario[i].radio) > 1):
+            artista = Artistas.objects.filter(email = email, contexto = comentario[i].context, idArtista = comentario[i].artista).first()
+            if(artista == None):
+                newArtista = Artistas()
+                newArtista.email = email
+                newArtista.contexto = comentario[i].context
+                newArtista.idArtista = comentario[i].artista
+                newArtista.nomeArtista = comentario[i].nomeArtista
+                newArtista.likes = 1
+                newArtista.pub_date = datetime.datetime.now()
+                newArtista.save()
+            else:
+                artista.likes+=1   
+                artista.save()     
     return 'sucesso'
 
 

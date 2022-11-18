@@ -47,4 +47,22 @@ class TrackSchema(Schema):
     liveness:float
     valence:float
 
+class IntervaloObject(Schema):
+    danceability_min:float
+    danceability_max:float
+    energy_min:float
+    energy_max:float
+    loudness_min:float
+    loudness_max:float
+    speechiness_min:float
+    speechiness_max:float
+    acousticness_min:float
+    acousticness_max:float
+    instrumentalness_min:float
+    instrumentalness_max:float
+    liveness_min:float
+    liveness_max:float
+    valence_min:float
+    valence_max:float
+
 
