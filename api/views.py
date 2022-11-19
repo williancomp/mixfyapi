@@ -82,6 +82,14 @@ def recomendacoes(request, email:str, context:str, popularidade:str, token:str):
             print("\n")
             print("RETORNANDO LISTA APRENDIDA===")
             print("\n")
+
+            predicoes =  modeloML(listaFinal, email, context, token)
+
+            print(listaFinal)
+
+            for i in range(len(listaFinal['tracks'])):
+                listaFinal['tracks'][i]['predict'] = predicoes[i]
+            
             return listaFinal
 
 
@@ -150,8 +158,8 @@ def generos(request, email:str, token:str, comentario:List[ComentarioSchema]):
 
 
 
-@api.post('/aprendizado/{email}/{context}')
-def aprendizado(request, email: str, context:str, track:TrackSchema):
+
+def aprendizado(email: str, context:str, features):
     
     # MODELO É CRIADO
     model = tree.HoeffdingTreeClassifier()
@@ -159,8 +167,6 @@ def aprendizado(request, email: str, context:str, track:TrackSchema):
     # MÉTRICA CRIADA
     metric = metrics.ClassificationReport()
 
-
-    
     avaliacoes = Avaliacoes.objects.filter(email = email, context = context)
 
     for avaliacao in avaliacoes:
@@ -186,13 +192,29 @@ def aprendizado(request, email: str, context:str, track:TrackSchema):
     print(metric)
     print("\n")
 
-
-
+    resultados = []
     #TESTAR VALOR RECEBIDO
-    value = {'context': track.context, 'danceability': track.danceability, 'energy': track.energy, 'loudness': track.loudness, 'speechiness': track.speechiness, 'acousticness': track.acousticness, 'instrumentalness': track.instrumentalness, 'liveness': track.liveness, 'valence': track.valence,}
+    for f in features:
+        value = {'context': context, 'danceability': f['danceability'], 'energy': f['energy'], 'loudness': f['loudness'], 'speechiness': f['speechiness'], 'acousticness': f['acousticness'], 'instrumentalness': f['instrumentalness'], 'liveness': f['liveness'], 'valence': f['valence'],}
+        proba_one = model.predict_one(value)
+        resultados.append(int(proba_one))
 
-    proba_one = model.predict_proba_one(value)
+    return resultados
+
+def modeloML(listaFinal, email, context, token):
+    url = "https://api.spotify.com/v1/audio-features"
+    ids = ""
+    for lista in listaFinal['tracks']:
+        ids+=lista['id'] + ','
+
+    #BUSCA AS MÚSICAS PELO SEUS IDs
+    response = requests.get(url, params={
+        "access_token": token, 
+        "ids": ids
+    }).json()
     
-    return proba_one
+    features = response['audio_features']
 
+    resultado = aprendizado(email, context, features)
 
+    return resultado
